@@ -33,5 +33,8 @@ print(data.columns)
 '''List of the variables that appear to have ordinal meaning
 -gill-size
 -ring-number
+-cap-shape
+-cap-surface
+-stalk-surface-below-ring
 '''
 
