@@ -15,7 +15,7 @@ def base_model_features(data_raw):
         data_clean = pd.get_dummies(data_clean,columns=[column])
     return data_clean
 def ordinal_max_features(data_raw):
-    features_with_ordinal_meaning = ['gill-size','ring-number']
+    features_with_ordinal_meaning = ['gill-size','ring-number','cap-shape','cap-surface','stalk-surface-below-ring']
 data_clean = base_model_features(data_raw)
 data_clean.to_csv('../data/processed/base_model_data',index=False)
 #print(data_raw['stalk-root'].nunique())
