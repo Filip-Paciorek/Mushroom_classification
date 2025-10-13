@@ -1,10 +1,9 @@
 import pandas as pd
 import numpy as np
 import sys
+import os
+import joblib
 from collections import defaultdict
-data = pd.read_csv('../data/raw/data_raw')
-
-
 #check for missing values
 def delete_nulls(data):
     for column in data.columns:
@@ -38,14 +37,11 @@ def correlation_test(column_name,data,output=False):
                 print(variable,'EVEN')
         #something wrong with this, figure it out!!
         variables[variable] = ratio
-    return variables        
-for column in data.columns:
-    #print(column)
-    correlation_test(column,data)
+    return variables
 def check_for_wrong_data(data):
     for column in data:
         print(column,data[column].unique())
-def ordinality_check(column_name,size,volume):
+def ordinality_check(column_name,data,size,volume):
     #set up base variables
     iters = np.random.randint(volume,size=size)
     past_state = 0
@@ -71,30 +67,30 @@ def ordinality_check(column_name,size,volume):
         print(column_name,'CONSISTENT')
         return column_name
 
-def analyse_ordinality(columns,size,volume):
+def analyse_ordinality(columns,data,size,volume):
     ordinal = []
     for column in columns:
         print(f'----------Check consistency for {column}----------')
-        verdict = ordinality_check(column,size,volume)
+        verdict = ordinality_check(column,data,size,volume)
         if verdict != None:
             ordinal.append(verdict)
         print(f'-----------End of check for {column}----------')
     print('ORDINAL COLUMNS: ', ordinal)
     return ordinal
-#print(data[data['cap-shape']=='nan'])
-#print(check_for_wrong_data(data))
-#print(data.columns)
+def get_ordinal_results(data_path='../data/raw/data_raw',cache_path='../data/interim/ordinal_results.plk',force_compute = False):
+    if os.path.exists(cache_path) and not force_compute:
+        print(f'Loading ordinal variables from: {cache_path}')
+        return joblib.load(cache_path)
+    print('Running full EDA analysis')
+    data = pd.read_csv(data_path)
+    ordinal_columns = analyse_ordinality(data.columns,data,size=1000, volume=100)
+    results = {'ordinal_columns': ordinal_columns}
+    joblib.dump(results, cache_path)
+    print('EDA analysis finished')
+    return results
 
-'''List of the variables that appear to have ordinal meaning
--gill-size
--ring-number
--cap-shape
--cap-surface
--stalk-surface-below-ring
-'''
-possibly_ordinal = ['gill-size','ring-number','cap-shape','cap-surface','stalk-surface-below-ring']
-analyse_ordinality(data.columns,1000,100)
-
+if __name__ == '__main__':
+    results = get_ordinal_results(force_compute=True)
 
 
 
