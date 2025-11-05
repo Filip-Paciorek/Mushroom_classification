@@ -19,12 +19,15 @@ def ordinal_max_features(data_raw,ord_columns):
     data_clean = data_raw
     for column in ord_columns:
         safety_score = len(ord_columns[column])
+        if column == 'class':
+            data_clean.loc[data_clean[column] == 'EDIBLE',column] = 1
+            data_clean.loc[data_clean[column] == 'POISONOUS',column] = 0
         for group in ord_columns[column]:
             if len(group) == 1:
                 data_clean.loc[data_clean[column] == group[0],column] = safety_score
             else:
                 for characteristic in group:
-                    print(characteristic)
+                    #print(characteristic)
                     data_clean.loc[data_clean[column] == characteristic,column] = safety_score
             safety_score -= 1
     for column in data_clean:
@@ -33,8 +36,8 @@ def ordinal_max_features(data_raw,ord_columns):
     return data_clean
 
 data_clean = ordinal_max_features(data_raw,results)
+print(data_clean)
 data_clean.to_csv('../data/processed/max_ordinal_data',index=False)
-print(data_clean.columns)
 
         
     

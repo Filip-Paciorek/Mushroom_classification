@@ -11,10 +11,13 @@ def delete_nulls(data):
 #checking variables for ordinal meaning
 def correlation_test(column_name,data,output=False):
     variables = {}
+    #go through each variable in the column
     for variable in data[column_name].unique():
+        #look for how much of the variable is poisonous and how much is edible
         classes,counts = np.unique(data[data[column_name]==variable]['class'],return_counts=True)
         ratio = 'No values'
         #print(counts)
+        #calculate ratio
         if len(counts) == 2:
             ratio = [counts[0]/(counts[0] + counts[1]), counts[1]/(counts[0]+counts[1])]
             ratio[0],ratio[1] = round(float(ratio[0]),1),round(float(ratio[1]),1)
@@ -28,6 +31,7 @@ def correlation_test(column_name,data,output=False):
             else:
                 ratio = [0,1,'POISONOUS']
         ratio.append(variable)
+        #purely visual part of code
         if output:
             if ratio[0] > ratio[1]:
                 print(variable,ratio)
@@ -35,20 +39,27 @@ def correlation_test(column_name,data,output=False):
                 print(variable,ratio)
             else:
                 print(variable,'EVEN')
+        #add the ratio to the dict
         variables[variable] = ratio
     return variables
+#sorting function
 def sort_by_edibility(characteristics):
     ranked_characteristics = {}
     sorted_characteristics = [0]*len(characteristics)
+    #for each item
     for item in characteristics:
+        #add a counter to each variable
         ranked_characteristics[item] = [item,0]
         for item2 in characteristics:
             if characteristics[item] < characteristics[item2]:
                 ranked_characteristics[item][1] += 1
+        #if its the first occurence
         if sorted_characteristics[ranked_characteristics[item][1]] == 0:
             sorted_characteristics[ranked_characteristics[item][1]] = [ranked_characteristics[item][0]]
+        #if its a repeated occurence
         else:
             sorted_characteristics[ranked_characteristics[item][1]].append(ranked_characteristics[item][0])
+    #get rid of 0s in ordered list
     sorted_characteristics = [x for x in sorted_characteristics if x != 0] 
 
     return sorted_characteristics
@@ -70,16 +81,19 @@ def ordinality_check(column_name,data,size,volume):
         #get variables into a dict
         vars = correlation_test(column_name,sample)
         #get a system that checks for consistency
-        #####figure out a way so that the variables get ordered by the possibility of being poisonous
         for var in vars:
+            #cumulate the % of edibility and add it to the dict entry of certain characteristic
             mean_edibility[vars[var][3]] += vars[var][0]
             #consistency[var].append(vars[var][3])
+            #append whethere characteristic is mostly edible or poisonous in this iteration
             consistency[var].append(vars[var][2])
+    #make it truly a mean
     for item in mean_edibility:
         mean_edibility[item] = mean_edibility[item]/size
+    #sort
     ordered_characteristics = sort_by_edibility(mean_edibility)
     for var in consistency:
-        #print(consistency[var])
+        #look for any difference between major edibility/inedibility, if it appears, flag as inedible
         flag = 0
         for i in range(len(consistency[var])-1):
             if consistency[var][i] != consistency[var][i+1]:
@@ -109,7 +123,8 @@ def get_ordinal_results(data_path='../data/raw/data_raw',cache_path='../data/int
         return joblib.load(cache_path)
     print('Running full EDA analysis')
     data = pd.read_csv(data_path)
-    ordinal_columns = analyse_ordinality(data.columns,data,size=1000, volume=100,include_characteristics=True)
+    print(data)
+    ordinal_columns = analyse_ordinality(data.columns,data,size=100, volume=100,include_characteristics=True)
     results = ordinal_columns
     joblib.dump(results, cache_path)
     print('EDA analysis finished')
