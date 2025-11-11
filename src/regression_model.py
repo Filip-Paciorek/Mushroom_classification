@@ -4,8 +4,10 @@ import sys
 #import feature models
 base_data = pd.read_csv('../data/processed/base_model_data')
 max_ord_data = pd.read_csv('../data/processed/max_ordinal_data')
-no_obvious_data_base = pd.read_csv('../data/processed/no_obvious_data')
-no_obvious_date_ordinal = pd.read_csv('../data/processed/no_obvious_data_ordinal')
+no_obvious_data_base_mild = pd.read_csv('../data/processed/no_obvious_data_base_mild')
+no_obvious_data_ordinal_mild = pd.read_csv('../data/processed/no_obvious_data_ordinal_mild')
+no_obvious_data_base_severe = pd.read_csv('../data/processed/no_obvious_data_ordinal_severe')
+no_obvious_data_ordinal_severe = pd.read_csv('../data/processed/no_obvious_data_ordinal_severe')
 def train_test_split(X,y,size,state):
     N = len(X)
     n_test = int(N*size)
@@ -71,7 +73,7 @@ def gradient_descent(X,y,batch,iter):
             w = w - (lr*d_w)
             b = b - (lr*d_b)
             y_pred = np.append(y_pred,a)
-        print(cross_enthropy_loss(y,y_pred))
+        #print(cross_enthropy_loss(y,y_pred))
     return w,b
 def predict_final(X,w,b):
     y_pred = []
@@ -91,32 +93,56 @@ def compare(y,y_pred):
         else:
             incorrect += 1
     sum = correct + incorrect
+    acc = round(correct/sum,4)
     print(f'Correct guesses: {correct}/{sum}')
     print(f'Incorrect guesses: {incorrect}/{sum}')
-X = base_data.drop(columns=['class'])
-y = base_data['class'] 
-X_train,X_test,y_train,y_test = train_test_split(X,y,0.2,103)
-w,b = gradient_descent(X_train,y_train,256,10)
-y_pred = predict_final(X_test,w,b)
-compare(y_test,y_pred)
-print('---')
-X = no_obvious_data_base.drop(columns=['class'])
-y = no_obvious_data_base['class'] 
-X_train,X_test,y_train,y_test = train_test_split(X,y,0.2,103)
-w,b = gradient_descent(X_train,y_train,256,10)
-y_pred = predict_final(X_test,w,b)
-compare(y_test,y_pred)
-print('---')
-X = max_ord_data.drop(columns=['class'])
-y = max_ord_data['class']
-X_train,X_test,y_train,y_test = train_test_split(X,y,0.2,103)
-w,b = gradient_descent(X_train,y_train,256,10)
-y_pred = predict_final(X_test,w,b)
-compare(y_test,y_pred)
-print(set(X_train.index).intersection(X_test.index))
-X = no_obvious_date_ordinal.drop(columns=['class'])
-y = no_obvious_date_ordinal['class']
-X_train,X_test,y_train,y_test = train_test_split(X,y,0.2,103)
-w,b = gradient_descent(X_train,y_train,256,10)
-y_pred = predict_final(X_test,w,b)
-compare(y_test,y_pred)
+    print(f'Accuracy:{acc}')
+    return correct,incorrect,acc
+def make_csv(models):
+    df  = pd.DataFrame()
+    for i in range(len(models)):
+        print(models[i][6])
+        encoding = models[i][0].partition('_')[0]
+        filtering = models[i][0].partition('_')[-1]
+        row = pd.DataFrame({'model_type':['log_reg'],'encoding':[encoding],'filtering':[filtering],'correct':[models[i][1]],'incorrect':[models[i][2]],'accuaracy':[models[i][3]],'precision':models[i][4],'recall':models[i][5],'f1':models[i][6]})
+        df = pd.concat([df,row],ignore_index=True)
+    df.to_csv('../data/processed/results.csv')    
+def get_confusion_matrix(y, y_pred):
+    y_pred= predict(y_pred)
+    TP = np.sum((y_pred == 1) & (y == 1))
+    TN = np.sum((y_pred == 0) & (y == 0))
+    FP = np.sum((y_pred == 1) & (y == 0))
+    FN = np.sum((y_pred == 0) & (y == 1))
+    return TP, TN, FP, FN
+def get_precision(TP,FP):
+    denominator = TP + FP
+    if denominator == 0:
+        return 0
+    return TP/denominator
+def get_recall(TP,FN):
+    denominator = TP + FN
+    if denominator == 0:
+        return 0
+    return TP/denominator
+def get_f1(precision,recall):
+    denominator = precision + recall
+    if denominator == 0:
+        return 0
+    return 2 * ((precision*recall)/denominator)
+def run_results(**kwargs):
+    results = []
+    for name,data in kwargs.items():
+        X = data.drop(columns=['class'])
+        y = data['class'] 
+        X_train,X_test,y_train,y_test = train_test_split(X,y,0.2,97)
+        w,b = gradient_descent(X_train,y_train,256,10)
+        y_pred = predict_final(X_test,w,b)
+        print(f'{name} model')
+        correct,incorrect,acc = compare(y_test,y_pred)
+        TP,TN,FP,FN = get_confusion_matrix(y_test,y_pred)
+        precision = get_precision(TP,FP)
+        recall = get_recall(TP,FN)
+        f1 = get_f1(precision,recall)
+        results.append([name,correct,incorrect,acc,precision,recall,f1])
+    make_csv(results)
+run_results(onehot_base=base_data,onehot_mild=no_obvious_data_base_mild,onehot_severe=no_obvious_data_base_severe,ordinal_base=max_ord_data,ordinal_mild=no_obvious_data_ordinal_mild,ordinal_severe=no_obvious_data_ordinal_severe)

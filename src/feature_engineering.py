@@ -9,6 +9,8 @@ results = get_ordinal_results()
 def no_obvious_features(state):
     if state == 'mild':
         return ['odor','gill-color','spore-print-color']
+    if state == 'severe':
+        return ['odor','gill-color','gill-size','bruises','spore-print-color']
     return []
 def base_model_features(data_raw,state=None):
     data_raw = data_raw.drop(no_obvious_features(state),axis=1)
@@ -47,9 +49,13 @@ def ordinal_max_features(data_raw,ord_columns,state=None):
 data_clean = ordinal_max_features(data_raw,results)
 data_clean.to_csv('../data/processed/max_ordinal_data',index=False)
 data_clean = ordinal_max_features(data_raw,results,'mild')
-data_clean.to_csv('../data/processed/no_obvious_data_ordinal',index=False)
+data_clean.to_csv('../data/processed/no_obvious_data_ordinal_mild',index=False)
+data_clean = ordinal_max_features(data_raw,results,'severe')
+data_clean.to_csv('../data/processed/no_obvious_data_ordinal_severe',index=False)
 data_clean = base_model_features(data_raw,'mild')
-data_clean.to_csv('../data/processed/no_obvious_data',index=False)    
+data_clean.to_csv('../data/processed/no_obvious_data_base_mild',index=False)    
+data_clean = base_model_features(data_raw,'severe')
+data_clean.to_csv('../data/processed/no_obvious_data_base_severe',index=False)    
 data_clean = base_model_features(data_raw)
 data_clean.to_csv('../data/processed/base_model_data',index=False)
 #print(data_raw['stalk-root'].nunique())
