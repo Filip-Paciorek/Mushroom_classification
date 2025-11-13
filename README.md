@@ -9,7 +9,7 @@
 ### **Dashboard Demonstration**
 
 <p align="center">
-  <video src="dashboard-demo.webm" autoplay loop muted playsinline width="800"></video>
+  <img src="dashboard-demo.gif" alt="Dashboard Demonstration" height="1200" width="1200">
 </p>
 
 ---
@@ -29,7 +29,7 @@ The goal of this project was to build and evaluate two logistic regression model
 
 ## Tech Stack
 
-- **Data Analysis:** Python, Pandas, NumPy, Scikit-learn
+- **Data Analysis:** Python, Pandas, NumPy
 - **Data Visualization:** Apache Superset
 - **Database:** PostgreSQL
 
@@ -57,15 +57,3 @@ The analysis clearly demonstrates that the choice of encoding strategy has a mea
 - **Ordinal Encoding provides a performance edge:** While both models perform well with a full feature set, the Ordinal model consistently makes fewer prediction errors when key features are restricted.
 - **Context is critical:** In a sensitive domain like predicting mushroom toxicity, minimizing every possible error is paramount. A false positive (classifying a poisonous mushroom as edible) has severe consequences.
 - **Recommendation:** The **Ordinal Encoded model (Model 2) is the recommended choice**. It provides a better balance of high accuracy and reliability, proving to be more adaptable in less-than-ideal feature environments.
-
-## How to Reproduce
-
-1.  **Set up Environment:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-2.  **Run Modeling:** Execute the analysis notebook to generate the `mushroom_results.csv` file containing the model performance metrics.
-3.  **Deploy Dashboard:**
-    -   Ensure you have a running instance of Apache Superset.
-    -   Upload the `data/processed/mushroom_results.csv` file as a new dataset.
-    -   Import the `superset/dashboard_export.zip` file to instantly recreate the dashboard.
